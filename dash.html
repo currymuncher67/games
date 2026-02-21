@@ -1,200 +1,103 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Dash World</title>
+<meta charset="UTF-8">
+<title>Geometry Dash Lite Clone</title>
 <style>
-body{
-margin:0;
-background:black;
-overflow:hidden;
-font-family:Arial;
-color:white;
-text-align:center;
-}
-button{
-padding:20px;
-font-size:20px;
-margin:20px;
-background:#111;
-color:#0ff;
-border:2px solid #0ff;
-cursor:pointer;
-}
-#menu, #characterMenu, #levelMenu, #game{
-display:none;
-}
-canvas{
-background:#000;
-display:block;
-margin:auto;
-}
+body { margin:0; background:#1e1e2f; font-family:sans-serif; overflow:hidden; }
+#menu { width:100%; height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+#menu h1 { color:#00ffff; font-size:50px; margin-bottom:30px; }
+button { padding:15px 40px; font-size:20px; margin:10px; border:none; border-radius:10px; cursor:pointer; background:#00ffff; color:#000; }
+canvas { display:none; background:#111; }
 </style>
 </head>
-
 <body>
 
-<h1>DASH WORLD</h1>
-
 <div id="menu">
-<button onclick="openLevels()">PLAY</button><br>
-<button onclick="openCharacters()">CHARACTERS</button>
+<h1>GEOMETRY DASH LITE</h1>
+<button onclick="startGame()">PLAY</button>
 </div>
 
-<div id="characterMenu">
-<h2>Select Character</h2>
-<div id="chars"></div>
-<button onclick="back()">Back</button>
-</div>
-
-<div id="levelMenu">
-<h2>Select Level</h2>
-<div id="levels"></div>
-<button onclick="back()">Back</button>
-</div>
-
-<div id="game">
-<canvas id="canvas"></canvas>
-</div>
+<canvas id="gameCanvas" width="900" height="400"></canvas>
 
 <script>
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
 
-let unlockedChars=[0];
-let unlockedLevels=[0];
+let gameSpeed = 5;
+let gravity = 0.6;
+let isJumping = false;
+let player = {x:100, y:300, size:40, velY:0};
 
-let currentChar=0;
-let currentLevel=0;
+let obstacles = [
+    {x:600, y:320, width:30, height:30},
+    {x:900, y:320, width:30, height:30},
+    {x:1300, y:320, width:30, height:30}
+];
 
-const charsDiv=document.getElementById("chars");
-const levelsDiv=document.getElementById("levels");
+document.addEventListener("keydown", e=>{
+    if(e.code=="Space" && !isJumping){
+        player.velY = -12;
+        isJumping = true;
+    }
+});
 
-function showMenu(){
-hideAll();
-document.getElementById("menu").style.display="block";
+function startGame(){
+    document.getElementById("menu").style.display="none";
+    canvas.style.display="block";
+    gameLoop();
 }
 
-function openCharacters(){
-hideAll();
-document.getElementById("characterMenu").style.display="block";
-renderChars();
+function resetGame(){
+    player.y = 300;
+    player.velY = 0;
+    isJumping = false;
+    obstacles = [
+        {x:600, y:320, width:30, height:30},
+        {x:900, y:320, width:30, height:30},
+        {x:1300, y:320, width:30, height:30}
+    ];
 }
 
-function openLevels(){
-hideAll();
-document.getElementById("levelMenu").style.display="block";
-renderLevels();
+function gameLoop(){
+    requestAnimationFrame(gameLoop);
+
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    // player physics
+    player.velY += gravity;
+    player.y += player.velY;
+    if(player.y >= 300){ player.y = 300; isJumping=false; }
+
+    // draw player
+    ctx.fillStyle = "#00ffff";
+    ctx.fillRect(player.x, player.y, player.size, player.size);
+
+    // move obstacles
+    for(let obs of obstacles){
+        obs.x -= gameSpeed;
+        ctx.fillStyle="red";
+        ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
+
+        // collision
+        if(player.x < obs.x+obs.width &&
+           player.x+player.size > obs.x &&
+           player.y < obs.y+obs.height &&
+           player.y+player.size > obs.y){
+            alert("Game Over!");
+            resetGame();
+        }
+
+        // recycle obstacles
+        if(obs.x + obs.width < 0){
+            obs.x = canvas.width + Math.random()*400;
+        }
+    }
+
+    // ground
+    ctx.fillStyle="white";
+    ctx.fillRect(0,340,canvas.width,5);
 }
-
-function hideAll(){
-document.getElementById("menu").style.display="none";
-document.getElementById("characterMenu").style.display="none";
-document.getElementById("levelMenu").style.display="none";
-document.getElementById("game").style.display="none";
-}
-
-function back(){
-showMenu();
-}
-
-function renderChars(){
-charsDiv.innerHTML="";
-for(let i=0;i<8;i++){
-let b=document.createElement("button");
-b.innerText=unlockedChars.includes(i)?"Cube "+(i+1):"Locked";
-b.onclick=()=>{ if(unlockedChars.includes(i)){currentChar=i;} }
-charsDiv.appendChild(b);
-}
-}
-
-function renderLevels(){
-levelsDiv.innerHTML="";
-for(let i=0;i<12;i++){
-let b=document.createElement("button");
-b.innerText=unlockedLevels.includes(i)?"Level "+(i+1):"Locked";
-b.onclick=()=>{ if(unlockedLevels.includes(i)){ startLevel(i);} }
-levelsDiv.appendChild(b);
-}
-}
-
-function startLevel(lvl){
-hideAll();
-document.getElementById("game").style.display="block";
-runGame(lvl);
-}
-
-const canvas=document.getElementById("canvas");
-const ctx=canvas.getContext("2d");
-canvas.width=900;
-canvas.height=400;
-
-function runGame(level){
-
-let player={x:100,y:300,size:30,dy:0};
-let gravity=0.8;
-let speed=5+level;
-let obstacles=[];
-let colorHue=0;
-
-function jump(){
-if(player.y>=300){
-player.dy=-15;
-}
-}
-
-document.onclick=jump;
-document.onkeydown=jump;
-
-function loop(){
-
-player.dy+=gravity;
-player.y+=player.dy;
-
-if(player.y>=300){
-player.y=300;
-player.dy=0;
-}
-
-if(Math.random()<0.02+level*0.005){
-obstacles.push({x:900,h:40+Math.random()*80});
-}
-
-for(let o of obstacles){
-o.x-=speed;
-}
-
-for(let o of obstacles){
-let oy=360-o.h;
-if(player.x<o.x+30 && player.x+30>o.x && player.y<oy+o.h && player.y+30>oy){
-return showMenu();
-}
-}
-
-colorHue+=2;
-ctx.fillStyle="hsl("+colorHue+",100%,10%)";
-ctx.fillRect(0,0,900,400);
-
-ctx.fillStyle="cyan";
-ctx.fillRect(player.x,player.y,30,30);
-
-ctx.fillStyle="magenta";
-for(let o of obstacles){
-let oy=360-o.h;
-ctx.beginPath();
-ctx.moveTo(o.x,oy+o.h);
-ctx.lineTo(o.x+15,oy);
-ctx.lineTo(o.x+30,oy+o.h);
-ctx.fill();
-}
-
-requestAnimationFrame(loop);
-}
-
-loop();
-
-}
-
-showMenu();
-
 </script>
-
 </body>
 </html>
