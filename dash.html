@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Dash Game</title>
+<style>
+body { margin:0; overflow:hidden; background:black; }
+canvas { background:#111; display:block; margin:auto; }
+</style>
+</head>
+
+<body>
+
+<canvas id="game"></canvas>
+
+<script>
+let canvas = document.getElementById("game");
+let ctx = canvas.getContext("2d");
+
+canvas.width = 800;
+canvas.height = 400;
+
+let player = {x:50, y:300, size:30, dy:0, jumping:false};
+let gravity = 1;
+let obstacles = [];
+let speed = 5;
+
+document.addEventListener("keydown", () => jump());
+document.addEventListener("click", () => jump());
+
+function jump(){
+    if(!player.jumping){
+        player.dy = -15;
+        player.jumping = true;
+    }
+}
+
+function update(){
+    player.dy += gravity;
+    player.y += player.dy;
+
+    if(player.y >= 300){
+        player.y = 300;
+        player.jumping = false;
+    }
+
+    if(Math.random() < 0.02){
+        obstacles.push({x:800, y:320, w:20, h:80});
+    }
+
+    obstacles.forEach(o => o.x -= speed);
+
+    obstacles.forEach(o => {
+        if(player.x < o.x+o.w &&
+           player.x+player.size > o.x &&
+           player.y < o.y+o.h &&
+           player.y+player.size > o.y){
+            alert("Game Over!");
+            document.location.reload();
+        }
+    });
+}
+
+function draw(){
+    ctx.clearRect(0,0,800,400);
+
+    ctx.fillStyle="cyan";
+    ctx.fillRect(player.x, player.y, player.size, player.size);
+
+    ctx.fillStyle="red";
+    obstacles.forEach(o => ctx.fillRect(o.x,o.y,o.w,o.h));
+}
+
+function loop(){
+    update();
+    draw();
+    requestAnimationFrame(loop);
+}
+
+loop();
+</script>
+
+</body>
+</html>
