@@ -1,103 +1,14 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
-<title>Geometry Dash Lite Clone</title>
-<style>
-body { margin:0; background:#1e1e2f; font-family:sans-serif; overflow:hidden; }
-#menu { width:100%; height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; }
-#menu h1 { color:#00ffff; font-size:50px; margin-bottom:30px; }
-button { padding:15px 40px; font-size:20px; margin:10px; border:none; border-radius:10px; cursor:pointer; background:#00ffff; color:#000; }
-canvas { display:none; background:#111; }
-</style>
+    <title>Raj's Game Hub</title>
 </head>
 <body>
+    <h1>Welcome to Raj's Game Hub</h1>
+    <p>Click below to play CrazyGames:</p>
 
-<div id="menu">
-<h1>GEOMETRY DASH LITE</h1>
-<button onclick="startGame()">PLAY</button>
-</div>
-
-<canvas id="gameCanvas" width="900" height="400"></canvas>
-
-<script>
-const canvas = document.getElementById("gameCanvas");
-const ctx = canvas.getContext("2d");
-
-let gameSpeed = 5;
-let gravity = 0.6;
-let isJumping = false;
-let player = {x:100, y:300, size:40, velY:0};
-
-let obstacles = [
-    {x:600, y:320, width:30, height:30},
-    {x:900, y:320, width:30, height:30},
-    {x:1300, y:320, width:30, height:30}
-];
-
-document.addEventListener("keydown", e=>{
-    if(e.code=="Space" && !isJumping){
-        player.velY = -12;
-        isJumping = true;
-    }
-});
-
-function startGame(){
-    document.getElementById("menu").style.display="none";
-    canvas.style.display="block";
-    gameLoop();
-}
-
-function resetGame(){
-    player.y = 300;
-    player.velY = 0;
-    isJumping = false;
-    obstacles = [
-        {x:600, y:320, width:30, height:30},
-        {x:900, y:320, width:30, height:30},
-        {x:1300, y:320, width:30, height:30}
-    ];
-}
-
-function gameLoop(){
-    requestAnimationFrame(gameLoop);
-
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-
-    // player physics
-    player.velY += gravity;
-    player.y += player.velY;
-    if(player.y >= 300){ player.y = 300; isJumping=false; }
-
-    // draw player
-    ctx.fillStyle = "#00ffff";
-    ctx.fillRect(player.x, player.y, player.size, player.size);
-
-    // move obstacles
-    for(let obs of obstacles){
-        obs.x -= gameSpeed;
-        ctx.fillStyle="red";
-        ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
-
-        // collision
-        if(player.x < obs.x+obs.width &&
-           player.x+player.size > obs.x &&
-           player.y < obs.y+obs.height &&
-           player.y+player.size > obs.y){
-            alert("Game Over!");
-            resetGame();
-        }
-
-        // recycle obstacles
-        if(obs.x + obs.width < 0){
-            obs.x = canvas.width + Math.random()*400;
-        }
-    }
-
-    // ground
-    ctx.fillStyle="white";
-    ctx.fillRect(0,340,canvas.width,5);
-}
-</script>
+    <a href="https://www.crazygames.com" target="_blank">
+        Go to CrazyGames
+    </a>
 </body>
 </html>
